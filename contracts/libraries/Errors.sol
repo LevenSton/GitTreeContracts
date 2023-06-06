@@ -12,10 +12,10 @@ library Errors {
     error CannotInitImplementation();
     error Initialized();
     error Paused();
-    // error SignatureExpired();
-    // error ZeroSpender();
-    // error SignatureInvalid();
-    // error NotOwnerOrApproved();
+    error ZeroSpender();
+    error NotOwnerOrApproved();
+    error SignatureExpired();
+    error SignatureInvalid();
     // error NotHub();
     // error TokenDoesNotExist();
     // error CallerNotWhitelistedModule();
