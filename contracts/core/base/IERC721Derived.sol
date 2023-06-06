@@ -24,8 +24,8 @@ interface IERC721Derived is IERC721 {
      */
     struct TokenData {
         address owner;
-        uint256 fatherTokenId;
         uint96 mintTimestamp;
+        uint256 fatherTokenId;
     }
 
     /**

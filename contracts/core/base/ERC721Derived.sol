@@ -2,13 +2,14 @@
 
 pragma solidity 0.8.18;
 
-import "./IERC721Derived.sol";
+//import "./IERC721Derived.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 /**
  * @dev Implementation of https://eips.ethereum.org/EIPS/eip-721[ERC721] Non-Fungible Token Standard, including
@@ -20,12 +21,7 @@ import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
  * 2. Constructor replaced with an initializer.
  * 3. Mint timestamp is now stored in a TokenData struct alongside the owner address.
  */
-abstract contract ERC721Derived is
-    Context,
-    ERC165,
-    IERC721Derived,
-    IERC721Metadata
-{
+abstract contract ERC721Derived is Context, ERC165, IERC721, IERC721Metadata {
     using Address for address;
     using Strings for uint256;
 
@@ -35,9 +31,7 @@ abstract contract ERC721Derived is
     // Token symbol
     string private _symbol;
 
-    // Mapping from token ID to token Data (owner address and mint timestamp uint96), this
-    // replaces the original mapping(uint256 => address) private _owners;
-    mapping(uint256 => IERC721Derived.TokenData) private _tokenData;
+    mapping(uint256 => address) private _owners;
 
     // Mapping owner address to token count
     mapping(address => uint256) private _balances;
@@ -93,48 +87,12 @@ abstract contract ERC721Derived is
     function ownerOf(
         uint256 tokenId
     ) public view virtual override returns (address) {
-        address owner = _tokenData[tokenId].owner;
+        address owner = _owners[tokenId];
         require(
             owner != address(0),
             "ERC721: owner query for nonexistent token"
         );
         return owner;
-    }
-
-    /**
-     * @dev See {IERC721Time-mintTimestampOf}
-     */
-    function mintTimestampOf(
-        uint256 tokenId
-    ) public view virtual override returns (uint256) {
-        uint96 mintTimestamp = _tokenData[tokenId].mintTimestamp;
-        require(
-            mintTimestamp != 0,
-            "ERC721: mint timestamp query for nonexistent token"
-        );
-        return mintTimestamp;
-    }
-
-    /**
-     * @dev See {IERC721Time-mintTimestampOf}
-     */
-    function tokenDataOf(
-        uint256 tokenId
-    ) public view virtual override returns (IERC721Derived.TokenData memory) {
-        require(
-            _exists(tokenId),
-            "ERC721: token data query for nonexistent token"
-        );
-        return _tokenData[tokenId];
-    }
-
-    /**
-     * @dev See {IERC721Time-exists}
-     */
-    function exists(
-        uint256 tokenId
-    ) public view virtual override returns (bool) {
-        return _exists(tokenId);
     }
 
     /**
@@ -313,7 +271,7 @@ abstract contract ERC721Derived is
      * and stop existing when they are burned (`_burn`).
      */
     function _exists(uint256 tokenId) internal view virtual returns (bool) {
-        return _tokenData[tokenId].owner != address(0);
+        return _owners[tokenId] != address(0);
     }
 
     /**
@@ -386,8 +344,7 @@ abstract contract ERC721Derived is
         _beforeTokenTransfer(address(0), to, tokenId);
 
         _balances[to] += 1;
-        _tokenData[tokenId].owner = to;
-        _tokenData[tokenId].mintTimestamp = uint96(block.timestamp);
+        _owners[tokenId] = to;
 
         emit Transfer(address(0), to, tokenId);
     }
@@ -411,7 +368,7 @@ abstract contract ERC721Derived is
         _approve(address(0), tokenId);
 
         _balances[owner] -= 1;
-        delete _tokenData[tokenId];
+        delete _owners[tokenId];
 
         emit Transfer(owner, address(0), tokenId);
     }
@@ -445,7 +402,7 @@ abstract contract ERC721Derived is
 
         _balances[from] -= 1;
         _balances[to] += 1;
-        _tokenData[tokenId].owner = to;
+        _owners[tokenId] = to;
 
         emit Transfer(from, to, tokenId);
     }

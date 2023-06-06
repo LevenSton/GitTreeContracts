@@ -12,8 +12,14 @@ import "@openzeppelin/contracts/interfaces/IERC4906.sol";
 abstract contract ERC721URIStorage is IERC4906, ERC721Enumerable {
     using Strings for uint256;
 
+    struct TokenInfo {
+        address creator;
+        uint96 royalty;
+        uint256 derivedFrom;
+        string tokenUrl;
+    }
     // Optional mapping for token URIs
-    mapping(uint256 => string) private _tokenURIs;
+    mapping(uint256 => TokenInfo) private _tokenInfo;
 
     /**
      * @dev See {IERC165-supportsInterface}
@@ -34,7 +40,7 @@ abstract contract ERC721URIStorage is IERC4906, ERC721Enumerable {
     ) public view virtual override returns (string memory) {
         _requireMinted(tokenId);
 
-        string memory _tokenURI = _tokenURIs[tokenId];
+        string memory _tokenURI = _tokenInfo[tokenId].tokenUrl;
         string memory base = _baseURI();
 
         // If there is no base URI, return the token URI.
@@ -58,17 +64,37 @@ abstract contract ERC721URIStorage is IERC4906, ERC721Enumerable {
      *
      * - `tokenId` must exist.
      */
-    function _setTokenURI(
+    function _setTokenInfo(
         uint256 tokenId,
-        string memory _tokenURI
+        string memory _tokenURI,
+        uint256 _royalty,
+        address _creator
     ) internal virtual {
         require(
             _exists(tokenId),
             "ERC721URIStorage: URI set of nonexistent token"
         );
-        _tokenURIs[tokenId] = _tokenURI;
+        _tokenInfo[tokenId].tokenUrl = _tokenURI;
+        _tokenInfo[tokenId].royalty = uint96(_royalty);
+        _tokenInfo[tokenId].creator = _creator;
 
         emit MetadataUpdate(tokenId);
+    }
+
+    function _getTokenCreator(uint256 tokenId) internal view returns (address) {
+        require(
+            _exists(tokenId),
+            "ERC721URIStorage: URI set of nonexistent token"
+        );
+        return _tokenInfo[tokenId].creator;
+    }
+
+    function _getTokenRoyalty(uint256 tokenId) internal view returns (uint256) {
+        require(
+            _exists(tokenId),
+            "ERC721URIStorage: URI set of nonexistent token"
+        );
+        return uint256(_tokenInfo[tokenId].royalty);
     }
 
     /**
@@ -79,8 +105,8 @@ abstract contract ERC721URIStorage is IERC4906, ERC721Enumerable {
     function _burn(uint256 tokenId) internal virtual override {
         super._burn(tokenId);
 
-        if (bytes(_tokenURIs[tokenId]).length != 0) {
-            delete _tokenURIs[tokenId];
+        if (bytes(_tokenInfo[tokenId].tokenUrl).length != 0) {
+            delete _tokenInfo[tokenId];
         }
     }
 }

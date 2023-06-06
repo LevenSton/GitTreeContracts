@@ -25,7 +25,7 @@ contract DerivedNFT is DerivedNFTBase, IDerivedNFT {
     uint256 internal _pubId;
     uint256 internal _tokenIdCounter;
     bool private _initialized;
-    uint256 internal _royaltyBasisPoints;
+    uint256 internal _baseRoyaltyForCollectionOwner;
 
     // bytes4(keccak256('royaltyInfo(uint256,uint256)')) == 0x2a55205a
     bytes4 internal constant INTERFACE_ID_ERC2981 = 0x2a55205a;
@@ -42,12 +42,13 @@ contract DerivedNFT is DerivedNFTBase, IDerivedNFT {
     function initialize(
         uint256 profileId,
         uint256 pubId,
+        uint256 baseRoyalty,
         string calldata name,
         string calldata symbol
     ) external override {
         if (_initialized) revert Errors.Initialized();
         _initialized = true;
-        _royaltyBasisPoints = 1000; // 10% of royalties
+        _baseRoyaltyForCollectionOwner = baseRoyalty;
         _profileId = profileId;
         _pubId = pubId;
         super._initialize(name, symbol);
@@ -56,94 +57,60 @@ contract DerivedNFT is DerivedNFTBase, IDerivedNFT {
 
     function mint(
         address to,
+        uint256 royalty,
         string memory tokenURI
     ) external override returns (uint256) {
         if (msg.sender != GITTREEHUB) revert Errors.NotGitTreeHub();
         unchecked {
             uint256 newItemId = _tokenIds.current();
             _mint(to, newItemId);
-            _setTokenURI(newItemId, tokenURI);
+            _setTokenInfo(newItemId, tokenURI, royalty, to);
 
             _tokenIds.increment();
             return newItemId;
         }
     }
 
-    // function getSourcePublicationPointer()
-    //     external
-    //     view
-    //     override
-    //     returns (uint256, uint256)
-    // {
-    //     return (_profileId, _pubId);
-    // }
-    // function tokenURI(
-    //     uint256 tokenId
-    // ) public view override returns (string memory) {
-    //     if (!_exists(tokenId)) revert Errors.TokenDoesNotExist();
-    //     return ILensHub(HUB).getContentURI(_profileId, _pubId);
-    // }
-    // /**
-    //  * @notice Changes the royalty percentage for secondary sales. Can only be called publication's
-    //  *         profile owner.
-    //  *
-    //  * @param royaltyBasisPoints The royalty percentage meassured in basis points. Each basis point
-    //  *                           represents 0.01%.
-    //  */
-    // function setRoyalty(uint256 royaltyBasisPoints) external {
-    //     if (IERC721(HUB).ownerOf(_profileId) == msg.sender) {
-    //         if (royaltyBasisPoints > BASIS_POINTS) {
-    //             revert Errors.InvalidParameter();
-    //         } else {
-    //             _royaltyBasisPoints = royaltyBasisPoints;
-    //         }
-    //     } else {
-    //         revert Errors.NotProfileOwner();
-    //     }
-    // }
-    // /**
-    //  * @notice Called with the sale price to determine how much royalty
-    //  *         is owed and to whom.
-    //  *
-    //  * @param tokenId The token ID of the NFT queried for royalty information.
-    //  * @param salePrice The sale price of the NFT specified.
-    //  * @return A tuple with the address who should receive the royalties and the royalty
-    //  * payment amount for the given sale price.
-    //  */
-    // function royaltyInfo(
-    //     uint256 tokenId,
-    //     uint256 salePrice
-    // ) external view returns (address, uint256) {
-    //     return (
-    //         IERC721(HUB).ownerOf(_profileId),
-    //         (salePrice * _royaltyBasisPoints) / BASIS_POINTS
-    //     );
-    // }
-    // /**
-    //  * @dev See {IERC165-supportsInterface}.
-    //  */
-    // // function supportsInterface(
-    // //     bytes4 interfaceId
-    // // ) public view virtual override(ERC721Enumerable) returns (bool) {
-    // //     return
-    // //         interfaceId == INTERFACE_ID_ERC2981 ||
-    // //         super.supportsInterface(interfaceId);
-    // // }
-    // /**
-    //  * @dev Upon transfers, we emit the transfer event in the hub.
-    //  */
-    // function _beforeTokenTransfer(
-    //     address from,
-    //     address to,
-    //     uint256 tokenId
-    // ) internal override {
-    //     super._beforeTokenTransfer(from, to, tokenId);
-    //     ILensHub(HUB).emitCollectNFTTransferEvent(
-    //         _profileId,
-    //         _pubId,
-    //         tokenId,
-    //         from,
-    //         to
-    //     );
-    // }
+    /**
+     * @notice Called with the sale price to determine how much royalty
+     *         is owed and to whom.
+     *
+     * @param tokenId The token ID of the NFT queried for royalty information.
+     * @param salePrice The sale price of the NFT specified.
+     * @return A tuple with the address who should receive the royalties and the royalty
+     * payment amount for the given sale price.
+     */
+    function royaltyInfo(
+        uint256 tokenId,
+        uint256 salePrice
+    ) external view returns (address, uint256, address, uint256) {
+        return (
+            IERC721(GITTREEHUB).ownerOf(_profileId),
+            (salePrice * _baseRoyaltyForCollectionOwner) / BASIS_POINTS,
+            _getTokenCreator(tokenId),
+            (salePrice * _getTokenRoyalty(tokenId)) / BASIS_POINTS
+        );
+    }
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override returns (bool) {
+        return
+            interfaceId == INTERFACE_ID_ERC2981 ||
+            super.supportsInterface(interfaceId);
+    }
+
+    /**
+     * @dev Upon transfers, we emit the transfer event in the hub.
+     */
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override {
+        super._beforeTokenTransfer(from, to, tokenId);
+    }
 }

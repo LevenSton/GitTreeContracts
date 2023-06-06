@@ -21,6 +21,7 @@ interface IDerivedNFT {
     function initialize(
         uint256 profileId,
         uint256 pubId,
+        uint256 baseRoyalty,
         string calldata name,
         string calldata symbol
     ) external;
@@ -30,12 +31,14 @@ interface IDerivedNFT {
      * upon collection.
      *
      * @param to The address to mint the NFT to.
+     * @param royalty royalty of this token
      * @param tokenURI The Url of this token
      *
      * @return uint256 An interger representing the minted token ID.
      */
     function mint(
         address to,
+        uint256 royalty,
         string memory tokenURI
     ) external returns (uint256);
 }
