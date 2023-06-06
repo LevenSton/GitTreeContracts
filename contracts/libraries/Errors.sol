@@ -16,7 +16,7 @@ library Errors {
     error NotOwnerOrApproved();
     error SignatureExpired();
     error SignatureInvalid();
-    // error NotHub();
+    error NotGitTreeHub();
     // error TokenDoesNotExist();
     // error CallerNotWhitelistedModule();
     // error CollectModuleNotWhitelisted();

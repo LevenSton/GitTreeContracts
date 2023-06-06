@@ -7,9 +7,9 @@ import {Errors} from "../../libraries/Errors.sol";
 import {DataTypes} from "../../libraries/LensDataTypes.sol";
 import {Events} from "../../libraries/Events.sol";
 import {ERC721Derived} from "../base/ERC721Derived.sol";
-import {ERC721Enumerable} from "../base/ERC721Enumerable.sol";
+import {ERC721URIStorage} from "../base/ERC721URIStorage.sol";
 
-abstract contract DerivedNFTBase is ERC721Enumerable, IDerivedNFTBase {
+abstract contract DerivedNFTBase is ERC721URIStorage, IDerivedNFTBase {
     bytes32 internal constant EIP712_REVISION_HASH = keccak256("1");
     bytes32 internal constant PERMIT_TYPEHASH =
         keccak256(

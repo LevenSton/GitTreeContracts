@@ -3,13 +3,13 @@
 
 pragma solidity 0.8.18;
 
-import "./ERC721Derived.sol";
+import "./ERC721Enumerable.sol";
 import "@openzeppelin/contracts/interfaces/IERC4906.sol";
 
 /**
  * @dev ERC721 token with storage based token URI management.
  */
-abstract contract ERC721URIStorage is IERC4906, ERC721Derived {
+abstract contract ERC721URIStorage is IERC4906, ERC721Enumerable {
     using Strings for uint256;
 
     // Optional mapping for token URIs
@@ -20,7 +20,7 @@ abstract contract ERC721URIStorage is IERC4906, ERC721Derived {
      */
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(ERC721Derived, IERC165) returns (bool) {
+    ) public view virtual override(ERC721Enumerable, IERC165) returns (bool) {
         return
             interfaceId == bytes4(0x49064906) ||
             super.supportsInterface(interfaceId);
