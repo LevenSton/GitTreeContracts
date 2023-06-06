@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.18;
 
-import {DataTypes} from "../libraries/GitTreeDataTypes.sol";
+import {GitTreeDataTypes} from "../libraries/GitTreeDataTypes.sol";
 
 /**
  * @title IGitTree
@@ -29,12 +29,7 @@ interface IGitTree {
 
     function setEmergencyAdmin(address newEmergencyAdmin) external;
 
-    /**
-     * @notice Returns the collect NFT implementation address.
-     *
-     * @return address The collect NFT implementation address.
-     */
-    function getCollectNFTImpl() external view returns (address);
+    function getDerivedNFTImpl() external view returns (address);
 
-    function setState(DataTypes.GitTreeState newState) external;
+    function setState(GitTreeDataTypes.GitTreeState newState) external;
 }

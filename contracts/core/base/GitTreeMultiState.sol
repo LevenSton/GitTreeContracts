@@ -3,7 +3,7 @@
 pragma solidity 0.8.18;
 
 import {Events} from "../../libraries/Events.sol";
-import {DataTypes} from "../../libraries/GitTreeDataTypes.sol";
+import {GitTreeDataTypes as DataTypes} from "../../libraries/GitTreeDataTypes.sol";
 import {Errors} from "../../libraries/Errors.sol";
 
 /**
@@ -22,13 +22,6 @@ abstract contract GitTreeMultiState {
         _;
     }
 
-    /**
-     * @notice Returns the current protocol state.
-     *
-     * @return GitTreeState The Protocol state, an enum, where:
-     *      0: Unpaused
-     *      1: Paused
-     */
     function getState() external view returns (DataTypes.GitTreeState) {
         return _state;
     }

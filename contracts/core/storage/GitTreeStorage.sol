@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.18;
 
-import {DataTypes} from "../../libraries/GitTreeDataTypes.sol";
+import "../../libraries/GitTreeDataTypes.sol" as DataTypes;
 
 /**
  * @title GitTreeStorage
@@ -53,18 +53,18 @@ abstract contract GitTreeStorage {
             "CollectWithSig(uint256 profileId,uint256 pubId,bytes data,uint256 nonce,uint256 deadline)"
         );
 
-    mapping(address => bool) internal _profileCreatorWhitelisted;
-    mapping(address => bool) internal _followModuleWhitelisted;
-    mapping(address => bool) internal _collectModuleWhitelisted;
-    mapping(address => bool) internal _referenceModuleWhitelisted;
+    // mapping(address => bool) internal _profileCreatorWhitelisted;
+    // mapping(address => bool) internal _followModuleWhitelisted;
+    // mapping(address => bool) internal _collectModuleWhitelisted;
+    // mapping(address => bool) internal _referenceModuleWhitelisted;
 
-    mapping(uint256 => address) internal _dispatcherByProfile;
-    mapping(bytes32 => uint256) internal _profileIdByHandleHash;
+    // mapping(uint256 => address) internal _dispatcherByProfile;
+    // mapping(bytes32 => uint256) internal _profileIdByHandleHash;
     //mapping(uint256 => DataTypes.ProfileStruct) internal _profileById;
     //mapping(uint256 => mapping(uint256 => DataTypes.PublicationStruct))
     //internal _pubByIdByProfile;
 
-    mapping(address => uint256) internal _defaultProfileByAddress;
+    //mapping(address => uint256) internal _defaultProfileByAddress;
 
     uint256 internal _profileCounter;
     address internal _governance;
