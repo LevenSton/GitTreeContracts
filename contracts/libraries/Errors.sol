@@ -17,38 +17,6 @@ library Errors {
     error SignatureExpired();
     error SignatureInvalid();
     error NotGitTreeHub();
-    // error TokenDoesNotExist();
-    // error CallerNotWhitelistedModule();
-    // error CollectModuleNotWhitelisted();
-    // error FollowModuleNotWhitelisted();
-    // error ReferenceModuleNotWhitelisted();
-    // error ProfileCreatorNotWhitelisted();
-    // error NotProfileOwner();
-    // error NotProfileOwnerOrDispatcher();
-    // error NotDispatcher();
-    // error PublicationDoesNotExist();
-    // error HandleTaken();
-    // error HandleLengthInvalid();
-    // error HandleContainsInvalidCharacters();
-    // error HandleFirstCharInvalid();
-    // error ProfileImageURILengthInvalid();
-    // error CallerNotFollowNFT();
-    // error CallerNotCollectNFT();
-    // error BlockNumberInvalid();
-    // error ArrayMismatch();
-    // error CannotCommentOnSelf();
-    // error NotWhitelisted();
-    // error InvalidParameter();
-
-    // // Module Errors
-    // error CollectExpired();
-    // error FollowInvalid();
-    // error ModuleDataMismatch();
-    // error FollowNotApproved();
-    // error MintLimitExceeded();
-    // error CollectNotAllowed();
-
-    // // MultiState Errors
-    // error Paused();
-    // error PublishingPaused();
+    error RoyaltyTooHigh();
+    error DerivedRuleModuleNotWhitelisted();
 }

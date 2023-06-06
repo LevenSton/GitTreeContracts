@@ -7,15 +7,18 @@ import {Errors} from "../libraries/Errors.sol";
 import {Events} from "../libraries/Events.sol";
 import {GitTreeStorage} from "./storage/GitTreeStorage.sol";
 import {VersionedInitializable} from "../upgradeability/VersionedInitializable.sol";
-import {GitTreeMultiState} from "./base/GitTreeMultiState.sol";
+import {GitTreeBaseState} from "./base/GitTreeBaseState.sol";
 import {IGitTree} from "../interfaces/IGitTree.sol";
 import {Lib_LensAddresses} from "../constants/Lib_LensAddresser.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {ILensHub} from "../interfaces/ILensHub.sol";
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
+import {IDerivedNFT} from "../interfaces/IDerivedNFT.sol";
+import {IDerivedModule} from "../interfaces/IDerivedModule.sol";
 
 contract GitTreeHub is
     VersionedInitializable,
-    GitTreeMultiState,
+    GitTreeBaseState,
     GitTreeStorage,
     IGitTree
 {
@@ -33,8 +36,14 @@ contract GitTreeHub is
         DERIVED_NFT_IMPL = derivedNFTImpl;
     }
 
-    function initialize(address newGovernance) external override initializer {
+    function initialize(
+        address newGovernance,
+        uint256 _maxBaseRoyaltyForColletionOwner,
+        uint256 _maxNFTRoyalty
+    ) external override initializer {
         _setState(GitTreeDataTypes.GitTreeState.Paused);
+        _setMaxBaseRoyaltyForCollection(_maxBaseRoyaltyForColletionOwner);
+        _setMaxNFTRoyalty(_maxNFTRoyalty);
         _setGovernance(newGovernance);
     }
 
@@ -76,10 +85,12 @@ contract GitTreeHub is
     /// *****EXTERNAL FUNCTIONS*****
     /// ***************************************
 
-    function createNewTree(
+    function createNewCollectionTree(
         GitTreeDataTypes.CreateNewTreeData calldata vars
     ) external returns (uint256) {
         _validateNotPaused();
+        _validateParams(vars.baseRoyalty);
+        uint256 profileId;
         uint256 newTreeId;
         if (
             this.getState() == GitTreeDataTypes.GitTreeState.OnlyForLensHandle
@@ -90,6 +101,7 @@ contract GitTreeHub is
             ) {
                 revert Errors.NotProfileOwner();
             }
+            profileId = vars.profileId;
             LensDataTypes.PostData memory postVar = LensDataTypes.PostData({
                 profileId: vars.profileId,
                 contentURI: vars.collDescURI,
@@ -99,14 +111,102 @@ contract GitTreeHub is
                 referenceModuleInitData: bytes("")
             });
             newTreeId = ILensHub(Lib_LensAddresses.LENS_HUB).post(postVar);
-        } else {}
-        //_deployDerivedNFT(vars.profileId, )
-        return newTreeId;
+        }
+
+        address derivedCollectionAddr = _deployDerivedCollection(
+            profileId,
+            newTreeId,
+            vars.baseRoyalty,
+            vars.collName,
+            vars.collSymbol
+        );
+
+        uint256 colltionId = ++_collectionCounter;
+        bytes memory returnData = _setStateVariable(
+            colltionId,
+            msg.sender,
+            derivedCollectionAddr,
+            vars.derivedRuleModule,
+            vars.collDescURI,
+            vars.derivedRuleModuleInitData
+        );
+        emit Events.NewCollectionCreated(
+            profileId,
+            newTreeId,
+            vars.collDescURI,
+            derivedCollectionAddr,
+            vars.derivedRuleModule,
+            returnData,
+            block.timestamp
+        );
+        return colltionId;
     }
 
     /// ****************************
     /// *****INTERNAL FUNCTIONS*****
     /// ****************************
+
+    function _setStateVariable(
+        uint256 colltionId,
+        address creator,
+        address collectionAddr,
+        address ruleModule,
+        string calldata url,
+        bytes memory ruleModuleInitData
+    ) internal returns (bytes memory) {
+        if (!_derivedRuleModuleWhitelisted[ruleModule])
+            revert Errors.DerivedRuleModuleNotWhitelisted();
+
+        uint256 len = _allCollections.length;
+        _balance[creator] += 1;
+        _holdIndexes[creator].push(len);
+        _collectionByIdCollInfo[colltionId] = DervideCollectionStruct({
+            contentURI: url,
+            derivedRuletModule: ruleModule,
+            collectNFT: collectionAddr
+        });
+        _collectionOwners[colltionId] = creator;
+        _allCollections.push(collectionAddr);
+
+        return
+            IDerivedModule(ruleModule).initializeDerivedRuleModule(
+                colltionId,
+                ruleModuleInitData
+            );
+    }
+
+    function _validateParams(uint256 baseRoyalty) internal view returns (bool) {
+        if (baseRoyalty > _maxBaseRoyaltyForColletionOwner) {
+            revert Errors.RoyaltyTooHigh();
+        }
+        return true;
+    }
+
+    function _deployDerivedCollection(
+        uint256 profileId,
+        uint256 newTreeId,
+        uint256 baseRoyalty,
+        string memory collName,
+        string memory collSymbol
+    ) internal returns (address) {
+        address derivedCollectionAddr = Clones.clone(DERIVED_NFT_IMPL);
+
+        IDerivedNFT(derivedCollectionAddr).initialize(
+            profileId,
+            newTreeId,
+            baseRoyalty,
+            collName,
+            collSymbol
+        );
+        emit Events.DerivedCollectioinDeployed(
+            profileId,
+            newTreeId,
+            derivedCollectionAddr,
+            block.timestamp
+        );
+
+        return derivedCollectionAddr;
+    }
 
     function _setGovernance(address newGovernance) internal {
         address prevGovernance = _governance;

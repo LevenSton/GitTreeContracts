@@ -24,8 +24,9 @@ contract DerivedNFT is DerivedNFTBase, IDerivedNFT {
     uint256 internal _profileId;
     uint256 internal _pubId;
     uint256 internal _tokenIdCounter;
-    bool private _initialized;
     uint256 internal _baseRoyaltyForCollectionOwner;
+    bool private _initialized;
+    bool public _bLinkLens;
 
     // bytes4(keccak256('royaltyInfo(uint256,uint256)')) == 0x2a55205a
     bytes4 internal constant INTERFACE_ID_ERC2981 = 0x2a55205a;
@@ -48,6 +49,7 @@ contract DerivedNFT is DerivedNFTBase, IDerivedNFT {
     ) external override {
         if (_initialized) revert Errors.Initialized();
         _initialized = true;
+        if (profileId > 0) _bLinkLens = true;
         _baseRoyaltyForCollectionOwner = baseRoyalty;
         _profileId = profileId;
         _pubId = pubId;
