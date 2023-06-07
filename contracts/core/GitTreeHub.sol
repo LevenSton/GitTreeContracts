@@ -11,10 +11,10 @@ import {GitTreeBaseState} from "./base/GitTreeBaseState.sol";
 import {IGitTree} from "../interfaces/IGitTree.sol";
 import {Lib_LensAddresses} from "../constants/Lib_LensAddresser.sol";
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {ILensHub} from "../interfaces/ILensHub.sol";
+import {ILensHub} from "../interfaces/lens/ILensHub.sol";
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {IDerivedNFT} from "../interfaces/IDerivedNFT.sol";
-import {IDerivedModule} from "../interfaces/IDerivedModule.sol";
+import {IDerivedRuleModule} from "../interfaces/IDerivedRuleModule.sol";
 
 contract GitTreeHub is
     VersionedInitializable,
@@ -125,6 +125,8 @@ contract GitTreeHub is
         bytes memory returnData = _setStateVariable(
             colltionId,
             msg.sender,
+            profileId,
+            newTreeId,
             derivedCollectionAddr,
             vars.derivedRuleModule,
             vars.collDescURI,
@@ -149,6 +151,8 @@ contract GitTreeHub is
     function _setStateVariable(
         uint256 colltionId,
         address creator,
+        uint256 profileId,
+        uint256 newTreeId,
         address collectionAddr,
         address ruleModule,
         string calldata url,
@@ -169,8 +173,10 @@ contract GitTreeHub is
         _allCollections.push(collectionAddr);
 
         return
-            IDerivedModule(ruleModule).initializeDerivedRuleModule(
+            IDerivedRuleModule(ruleModule).initializeDerivedRuleModule(
                 colltionId,
+                profileId,
+                newTreeId,
                 ruleModuleInitData
             );
     }

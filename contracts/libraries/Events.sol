@@ -58,6 +58,11 @@ library Events {
     );
 
     event BaseInitialized(string name, string symbol, uint256 timestamp);
+    event ModuleBaseConstructed(
+        address indexed lensHub,
+        address indexed gitTreeHub,
+        uint256 timestamp
+    );
 
     ////////////////////////////////////////
 
@@ -505,7 +510,6 @@ library Events {
      * @param hub The contract address used.
      * @param timestamp The current block timestamp.
      */
-    event ModuleBaseConstructed(address indexed hub, uint256 timestamp);
 
     /**
      * @notice Emitted when one or multiple addresses are approved (or disapproved) for following in

@@ -19,4 +19,5 @@ library Errors {
     error NotGitTreeHub();
     error RoyaltyTooHigh();
     error DerivedRuleModuleNotWhitelisted();
+    error FollowInvalid();
 }

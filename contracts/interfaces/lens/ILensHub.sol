@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.18;
 
-import {DataTypes} from "../libraries/LensDataTypes.sol";
+import {DataTypes} from "../../libraries/LensDataTypes.sol";
 
 /**
  * @title ILensHub
